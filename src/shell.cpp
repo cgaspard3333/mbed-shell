@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "shell.h"
+#include "USBSerial.h"
 
 static mbed::Stream *stream = nullptr;
 static bool disabled = false;
@@ -38,9 +39,9 @@ static void displayHelp(bool parameter)
     unsigned int i;
 
     if (parameter) {
-        shell_stream()->puts("Available parameters:");
+        shell_print("Available parameters:");
     } else {
-        shell_stream()->puts("Available commands:");
+        shell_print("Available commands:");
     }
     shell_println();
 
@@ -113,10 +114,10 @@ SHELL_COMMAND(echo, "Switch echo mode. Usage echo [on|off]")
 {
     if ((argc == 1 && strcmp("on", argv[0])) || shell_echo_mode == false) {
         shell_echo_mode = true;
-        shell_stream()->puts("Echo enabled");
+        shell_print("Echo enabled");
     } else {
         shell_echo_mode = false;
-        shell_stream()->puts("Echo disabled");
+        shell_print("Echo disabled");
     }
 }
 
@@ -125,7 +126,7 @@ SHELL_COMMAND(echo, "Switch echo mode. Usage echo [on|off]")
  */
 void shell_prompt()
 {
-    stream->puts(SHELL_PROMPT);
+    shell_print(SHELL_PROMPT);
 }
 
 const struct shell_command *shell_find_command(char *command_name, unsigned int command_name_length)
@@ -176,7 +177,7 @@ bool shell_execute(char *command_name, unsigned int command_name_length,
                 }
 
                 if (!command) {
-                    stream->puts("Unknown parameter: ");
+                    shell_print("Unknown parameter: ");
                     stream->write(command_name, command_name_length);
                     shell_println();
                     return false;
@@ -187,7 +188,7 @@ bool shell_execute(char *command_name, unsigned int command_name_length,
 
     // If it fails again, display the "unknown command" message
     if (command == NULL) {
-        stream->puts("Unknown command: ");
+        shell_print("Unknown command: ");
         stream->write(command_name, command_name_length);
         shell_println();
         return false;
@@ -235,6 +236,26 @@ void shell_process()
     shell_prompt();
 }
 
+void shell_task()
+{
+    while (true) {
+        shell_tick(true);
+    }
+}
+
+USBSerial *usbSerial;
+
+void shell_usb_task()
+{
+    usbSerial->connect();
+    usbSerial->wait_ready();
+    stream = usbSerial;
+    shell_prompt();
+    shell_task();    
+}
+
+Thread shell_thread(osPriorityLow);
+
 /**
  * Save the Serial object globaly
  */
@@ -242,6 +263,15 @@ void shell_init(mbed::Stream *stream_)
 {
     stream = stream_;
     shell_prompt();
+
+    // Starting thread priority
+    shell_thread.start(shell_task);
+}
+
+void shell_init_usb()
+{
+    usbSerial = new USBSerial(false);
+    shell_thread.start(shell_usb_task);
 }
 
 mbed::Stream *shell_stream()
@@ -276,7 +306,7 @@ void shell_enable()
  * Ticking the shell, this will cause lookup for characters 
  * and eventually a call to the process function on new lines
  */
-void shell_tick()
+void shell_tick(bool blocking)
 {
     if (disabled || stream == nullptr) {
         return;
@@ -285,10 +315,10 @@ void shell_tick()
     char c;
     uint8_t input;
 
-    while (stream->readable()) {
+    while (blocking || stream->readable()) {
         input = stream->getc();
         c = (char)input;
-        if (c == '\0') {
+        if (c == '\0' || c == 0xff) {
             continue;
         }
 
@@ -311,19 +341,17 @@ void shell_tick()
         } else if (c == '\x7f') {
             if (shell_pos > 0) {
                 shell_pos--;
-                stream->puts("\x8 \x8");
+                shell_print("\x8 \x8");
             }
             //Special key
         } else if (c == '\x1b') {
-            while (!stream->readable());
             stream->getc();
-            while (!stream->readable());
             stream->getc();
             //Others
         } else {
             shell_buffer[shell_pos] = c;
             if (shell_echo_mode) {
-                stream->putc(c);
+                shell_print(c);
             }
 
             if (shell_pos < SHELL_BUFFER_SIZE-1) {
@@ -354,16 +382,16 @@ float shell_atof(char *str)
 
 void shell_println()
 {
-    shell_stream()->puts("\r\n");
+    shell_print("\r\n");
 }
 
 
 void shell_print_bool(bool value)
 {
     if (value) {
-        shell_stream()->puts("true");
+        shell_print("true");
     } else {
-        shell_stream()->puts("false");
+        shell_print("false");
     }
 }
 
@@ -383,7 +411,7 @@ void shell_print(unsigned long long n, uint8_t base)
     unsigned long i = 0;
 
     if (n == 0) {
-        shell_stream()->putc('0');
+        shell_print('0');
         return;
     }
 
@@ -393,7 +421,7 @@ void shell_print(unsigned long long n, uint8_t base)
     }
 
     for (; i > 0; i--) {
-        shell_stream()->putc((char)(buf[i - 1] < 10 ?
+        shell_print((char)(buf[i - 1] < 10 ?
                      '0' + buf[i - 1] :
                      'A' + buf[i - 1] - 10));
     }
@@ -429,15 +457,15 @@ void shell_print(double number, int digits)
     // Hackish fail-fast behavior for large-magnitude doubles
     if (abs(number) >= LARGE_DOUBLE_TRESHOLD) {
         if (number < 0.0) {
-            shell_stream()->putc('-');
+            shell_print('-');
         }
-        shell_stream()->puts("<large double>");
+        shell_print("<large double>");
         return;
     }
 
     // Handle negative numbers
     if (number < 0.0) {
-        shell_stream()->putc('-');
+        shell_print('-');
         number = -number;
     }
 
@@ -456,7 +484,7 @@ void shell_print(double number, int digits)
 
     // Print the decimal point, but only if there are digits beyond
     if (digits > 0) {
-        shell_stream()->putc('.');
+        shell_print('.');
     }
 
     // Extract digits from the remainder one at a time

@@ -37,6 +37,8 @@
  */
 void shell_init(mbed::Stream *stream);
 
+void shell_init_usb();
+
 /**
  * Get the shell stream instance
  */
@@ -58,7 +60,7 @@ void shell_enable();
  * Call this function in your main loop 
  * to fetch serial port and handle shell
  */
-void shell_tick();
+void shell_tick(bool blocking=false);
 
 /**
  * Mute the shell
