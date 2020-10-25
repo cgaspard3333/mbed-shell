@@ -1,0 +1,22 @@
+{
+  "name": "rhoban-mbed-shell",
+  "version": "1.0.0",
+  "description": "Allows to declare shell commands and parameters to interact with board",
+  "keywords": "shell, terminal",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/Rhoban/mbed-shell.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Grégoire Passault",
+      "email": "g.passault@gmail.com",
+      "url": "https://www.gregwar.com/"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*"
+}
