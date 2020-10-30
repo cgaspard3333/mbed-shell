@@ -4,6 +4,7 @@
 #include <Stream.h>
 #include <mbed.h>
 #include <stdlib.h>
+#include "USBSerial.h"
 
 /**
  * Maximum length of a command line
@@ -43,6 +44,12 @@ void shell_init_usb();
  * Get the shell stream instance
  */
 mbed::Stream *shell_stream();
+USBSerial *shell_usb_stream();
+
+/**
+ *  There is data available from user (can be used to stop an infinite loop in a command)
+ */
+bool shell_available();
 
 /**
  * Resets the shell
@@ -60,7 +67,7 @@ void shell_enable();
  * Call this function in your main loop 
  * to fetch serial port and handle shell
  */
-void shell_tick(bool blocking=false);
+void shell_tick();
 
 /**
  * Mute the shell
@@ -158,6 +165,15 @@ void shell_print(int n, uint8_t base=10);
 void shell_print(unsigned int n, uint8_t base=10);
 void shell_print(double d, int digits=2);
 void shell_print(bool b);
+
+void shell_println(char *s);
+void shell_println(char c);
+void shell_println(unsigned long long n, uint8_t base=10);
+void shell_println(long long n, uint8_t base=10);
+void shell_println(int n, uint8_t base=10);
+void shell_println(unsigned int n, uint8_t base=10);
+void shell_println(double d, int digits=2);
+void shell_println(bool b);
 void shell_println();
 
 #endif // _shell_H

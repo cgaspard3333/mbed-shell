@@ -236,22 +236,30 @@ void shell_process()
     shell_prompt();
 }
 
+USBSerial *usbSerial = nullptr;
+
 void shell_task()
 {
     while (true) {
-        shell_tick(true);
+        shell_tick();
     }
 }
 
-USBSerial *usbSerial;
-
 void shell_usb_task()
 {
-    usbSerial->connect();
-    usbSerial->wait_ready();
+    usbSerial = new USBSerial();
     stream = usbSerial;
     shell_prompt();
     shell_task();    
+}
+
+bool shell_available()
+{
+    if (usbSerial != nullptr) {
+        return usbSerial->available() > 0;
+    } else {
+        return stream->readable();
+    }
 }
 
 Thread shell_thread(osPriorityLow);
@@ -270,13 +278,17 @@ void shell_init(mbed::Stream *stream_)
 
 void shell_init_usb()
 {
-    usbSerial = new USBSerial(false);
     shell_thread.start(shell_usb_task);
 }
 
 mbed::Stream *shell_stream()
 {
     return stream;
+}
+
+USBSerial *shell_usb_stream()
+{
+    return usbSerial;
 }
 
 void shell_reset()
@@ -306,7 +318,7 @@ void shell_enable()
  * Ticking the shell, this will cause lookup for characters 
  * and eventually a call to the process function on new lines
  */
-void shell_tick(bool blocking)
+void shell_tick()
 {
     if (disabled || stream == nullptr) {
         return;
@@ -315,7 +327,7 @@ void shell_tick(bool blocking)
     char c;
     uint8_t input;
 
-    while (blocking || stream->readable()) {
+    while (stream->readable()) {
         input = stream->getc();
         c = (char)input;
         if (c == '\0' || c == 0xff) {
@@ -499,4 +511,52 @@ void shell_print(double number, int digits)
 void shell_print(bool b)
 {
     shell_print_bool(b);
+}
+
+void shell_println(char *s)
+{
+    shell_print(s);
+    shell_println();
+}
+
+void shell_println(char c)
+{
+    shell_print(c);
+    shell_println();
+}
+
+void shell_println(unsigned long long n, uint8_t base)
+{
+    shell_print(n, base);
+    shell_println();
+}
+
+void shell_println(long long n, uint8_t base=10)
+{
+    shell_print(n, base);
+    shell_println();
+}
+
+void shell_println(int n, uint8_t base=10)
+{
+    shell_print(n, base);
+    shell_println();
+}
+
+void shell_println(unsigned int n, uint8_t base=10)
+{
+    shell_print(n, base);
+    shell_println();
+}
+
+void shell_println(double d, int digits=2)
+{
+    shell_print(d, digits);
+    shell_println();
+}
+
+void shell_println(bool b)
+{
+    shell_print(b);
+    shell_println();
 }
