@@ -531,25 +531,25 @@ void shell_println(unsigned long long n, uint8_t base)
     shell_println();
 }
 
-void shell_println(long long n, uint8_t base=10)
+void shell_println(long long n, uint8_t base)
 {
     shell_print(n, base);
     shell_println();
 }
 
-void shell_println(int n, uint8_t base=10)
+void shell_println(int n, uint8_t base)
 {
     shell_print(n, base);
     shell_println();
 }
 
-void shell_println(unsigned int n, uint8_t base=10)
+void shell_println(unsigned int n, uint8_t base)
 {
     shell_print(n, base);
     shell_println();
 }
 
-void shell_println(double d, int digits=2)
+void shell_println(double d, int digits)
 {
     shell_print(d, digits);
     shell_println();
