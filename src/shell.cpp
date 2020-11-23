@@ -238,7 +238,7 @@ void shell_usb_task() {
   shell_prompt();
 
   while (true) {
-    if (usbSerial->connected()) {
+    if (usbSerial->available()) {
       shell_tick();
     } else {
       ThisThread::sleep_for(5);
@@ -303,13 +303,12 @@ void shell_tick() {
   char c;
   uint8_t input;
 
-  size_t received = stream->read(&c, 1);
-
-  if (received == 1) {
-    // input = stream->getc();
-    // c = (char)input;
+  while ((usbSerial != nullptr && usbSerial->available()) ||
+         (usbSerial == nullptr && stream->readable())) {
+    input = stream->getc();
+    c = (char)input;
     if (c == '\0' || c == 0xff) {
-      return;
+      continue;
     }
 
     // Return key
