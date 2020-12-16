@@ -50,7 +50,7 @@ You can declare parameters with following macros:
 
 ```c
 SHELL_PARAMETER_INT(i, "An int", 5);
-SHELL_PARAMETER_FLOAT(f, "An float", 12.5);
+SHELL_PARAMETER_FLOAT(f, "A float", 12.5);
 SHELL_PARAMETER_INT(b, "A bool", false);
 ```
 
