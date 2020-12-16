@@ -73,3 +73,16 @@ SHELL_COMMAND(count, "Count")
 ```
 
 This will display numbers until you press any key.
+
+## Printing
+
+You can use `shell_printf()`, but it is known to be a very slow function, and floats are not supported.
+
+Alternatively, you can also call `shell_print()` and `shell_println()` functions. It is possible to print floats
+with a provided precision (default=2 decimals):
+
+```c
+float x = 0.123456;
+shell_print("x=");
+shell_println(x, 6);
+```
