@@ -157,7 +157,7 @@ float shell_atof(char *str);
     SHELL_PARAMETER(name, description, startValue, bool, (bool)atoi)
 
 // Utility functions
-void shell_print(char *s);
+void shell_print(const char *s);
 void shell_print(char c);
 void shell_print(unsigned long long n, uint8_t base=10);
 void shell_print(long long n, uint8_t base=10);
@@ -166,7 +166,7 @@ void shell_print(unsigned int n, uint8_t base=10);
 void shell_print(double d, int digits=2);
 void shell_print(bool b);
 
-void shell_println(char *s);
+void shell_println(const char *s);
 void shell_println(char c);
 void shell_println(unsigned long long n, uint8_t base=10);
 void shell_println(long long n, uint8_t base=10);
@@ -175,6 +175,8 @@ void shell_println(unsigned int n, uint8_t base=10);
 void shell_println(double d, int digits=2);
 void shell_println(bool b);
 void shell_println();
+
+void shell_printf(char *s, ...);
 
 #endif // _shell_H
 

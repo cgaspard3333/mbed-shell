@@ -241,7 +241,7 @@ void shell_usb_task() {
     if (usbSerial->available()) {
       shell_tick();
     } else {
-      ThisThread::sleep_for(5);
+      ThisThread::sleep_for(5ms);
     }
   }
 }
@@ -377,7 +377,7 @@ void shell_print_bool(bool value) {
   }
 }
 
-void shell_print(char *s) { stream->puts(s); }
+void shell_print(const char *s) { stream->puts(s); }
 
 void shell_print(char c) { stream->putc(c); }
 
@@ -468,7 +468,7 @@ void shell_print(double number, int digits) {
 
 void shell_print(bool b) { shell_print_bool(b); }
 
-void shell_println(char *s) {
+void shell_println(const char *s) {
   shell_print(s);
   shell_println();
 }
@@ -506,4 +506,9 @@ void shell_println(double d, int digits) {
 void shell_println(bool b) {
   shell_print(b);
   shell_println();
+}
+
+void shell_printf(char *s, ...) {
+    va_list arglist;
+    stream->printf(s, arglist);
 }
