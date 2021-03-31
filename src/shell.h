@@ -176,7 +176,7 @@ void shell_println(double d, int digits=2);
 void shell_println(bool b);
 void shell_println();
 
-void shell_printf(char *s, ...);
+void shell_printf(char *format, ...);
 
 #endif // _shell_H
 

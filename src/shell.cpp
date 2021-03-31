@@ -508,7 +508,15 @@ void shell_println(bool b) {
   shell_println();
 }
 
-void shell_printf(char *s, ...) {
-    va_list arglist;
-    stream->printf(s, arglist);
+void shell_printf(char *format, ...) {
+  std::va_list args;
+  va_start(args, format);
+  int str_size = vsnprintf(NULL, 0, format, args);
+  va_end(args);
+  char buffer[str_size+1];
+  va_start(args, format);
+  vsnprintf(buffer, str_size+1, format, args);
+  va_end(args);
+
+  stream->write(buffer, str_size);
 }
