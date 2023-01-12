@@ -36,14 +36,14 @@
  * @param com : you have to provide to shell_init
  * an initialized instance of USBSerial or HardwareSerial
  */
-void shell_init(mbed::Stream *stream);
+void shell_init(mbed::FileHandle *file_handle);
 
 void shell_init_usb();
 
 /**
  * Get the shell stream instance
  */
-mbed::Stream *shell_stream();
+mbed::FileHandle *shell_stream();
 USBSerial *shell_usb_stream();
 
 /**

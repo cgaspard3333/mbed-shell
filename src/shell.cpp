@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static mbed::Stream *stream = nullptr;
+static mbed::FileHandle *file_handle = nullptr;
 static bool disabled = false;
 
 /**
@@ -168,7 +168,7 @@ bool shell_execute(char *command_name, unsigned int command_name_length,
 
         if (!command) {
           shell_print("Unknown parameter: ");
-          stream->write(command_name, command_name_length);
+          file_handle->write(command_name, command_name_length);
           shell_println();
           return false;
         }
@@ -179,7 +179,7 @@ bool shell_execute(char *command_name, unsigned int command_name_length,
   // If it fails again, display the "unknown command" message
   if (command == NULL) {
     shell_print("Unknown command: ");
-    stream->write(command_name, command_name_length);
+    file_handle->write(command_name, command_name_length);
     shell_println();
     return false;
   }
@@ -234,7 +234,7 @@ void shell_task() {
 
 void shell_usb_task() {
   usbSerial = new USBSerial();
-  stream = usbSerial;
+  file_handle = usbSerial;
   shell_prompt();
 
   while (true) {
@@ -250,7 +250,7 @@ bool shell_available() {
   if (usbSerial != nullptr) {
     return usbSerial->available() > 0;
   } else {
-    return stream->readable();
+    return file_handle->readable();
   }
 }
 
@@ -259,8 +259,8 @@ Thread shell_thread(osPriorityLow);
 /**
  * Save the Serial object globaly
  */
-void shell_init(mbed::Stream *stream_) {
-  stream = stream_;
+void shell_init(mbed::FileHandle *file_handle_) {
+  file_handle = file_handle_;
   shell_prompt();
 
   // Starting thread priority
@@ -269,7 +269,7 @@ void shell_init(mbed::Stream *stream_) {
 
 void shell_init_usb() { shell_thread.start(shell_usb_task); }
 
-mbed::Stream *shell_stream() { return stream; }
+mbed::FileHandle *shell_stream() { return file_handle; }
 
 USBSerial *shell_usb_stream() { return usbSerial; }
 
@@ -296,7 +296,7 @@ void shell_enable() {
  * and eventually a call to the process function on new lines
  */
 void shell_tick() {
-  if (disabled || stream == nullptr) {
+  if (disabled || file_handle == nullptr) {
     return;
   }
 
@@ -304,8 +304,8 @@ void shell_tick() {
   uint8_t input;
 
   while ((usbSerial != nullptr && usbSerial->available()) ||
-         (usbSerial == nullptr && stream->readable())) {
-    input = stream->getc();
+         (usbSerial == nullptr && file_handle->readable())) {
+    file_handle->read(&input, 1);
     c = (char)input;
     if (c == '\0' || c == 0xff) {
       continue;
@@ -334,8 +334,8 @@ void shell_tick() {
       }
       // Special key
     } else if (c == '\x1b') {
-      stream->getc();
-      stream->getc();
+      uint8_t dummy[2];
+      file_handle->read(dummy, 2);
       // Others
     } else {
       shell_buffer[shell_pos] = c;
@@ -377,9 +377,9 @@ void shell_print_bool(bool value) {
   }
 }
 
-void shell_print(const char *s) { stream->puts(s); }
+void shell_print(const char *s) { file_handle->write(s, strlen(s)); }
 
-void shell_print(char c) { stream->putc(c); }
+void shell_print(char c) { file_handle->write(&c, 1); }
 
 void shell_print(unsigned long long n, uint8_t base) {
   unsigned char buf[CHAR_BIT * sizeof(long long)];
@@ -513,10 +513,10 @@ void shell_printf(char *format, ...) {
   va_start(args, format);
   int str_size = vsnprintf(NULL, 0, format, args);
   va_end(args);
-  char buffer[str_size+1];
+  char buffer[str_size + 1];
   va_start(args, format);
-  vsnprintf(buffer, str_size+1, format, args);
+  vsnprintf(buffer, str_size + 1, format, args);
   va_end(args);
 
-  stream->write(buffer, str_size);
+  file_handle->write(buffer, str_size);
 }
