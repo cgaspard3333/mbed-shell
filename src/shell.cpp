@@ -105,15 +105,19 @@ SHELL_COMMAND(params,
  * Switch echo mode
  */
 SHELL_COMMAND(echo, "Switch echo mode. Usage echo [on|off]") {
-  if ((argc == 1 && strcmp("on", argv[0]))) {
+  if ((argc == 1 && !strcmp("on", argv[0]))) {
     shell_echo_mode = true;
     shell_print("Echo enabled");
-  else if ((argc == 1 && strcmp("off", argv[0]))) {
+    shell_println();
+  }
+  else if ((argc == 1 && !strcmp("off", argv[0]))) {
     shell_echo_mode = false;
     shell_print("Echo disable");
+    shell_println();
   }
   else{
     shell_print("Usage : echo [on|off]");
+    shell_println();
   }
 }
 
